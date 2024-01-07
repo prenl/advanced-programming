@@ -2,7 +2,9 @@
 <nav>
     <div class="">
         <a href="/">Home</a>
+        {{if .IsAuthenticated}}
         <a href="/snippet/create">Create snippet</a>
+        {{end}}
     </div>
     <div class="">
         {{if .IsAuthenticated}}
