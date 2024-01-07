@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"snippetbox.yelnurabdrakhmanov.net/internal/models"
@@ -67,10 +66,10 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 type snippetCreateForm struct {
-	Title string
-	Content string
-	Expires int
-	validator.Validator
+	Title 					string 	`form:"title"`
+	Content 				string 	`form:"content"`
+	Expires 				int 	`form:"expires"`
+	validator.Validator 			`form:"-"`
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
@@ -81,17 +80,12 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	var form snippetCreateForm
 
+	err = app.formDecoder.Decode(&form, r.PostForm)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	form := &snippetCreateForm{
-		Title: strings.TrimSpace(r.PostForm.Get("title")),
-		Content: strings.TrimSpace(r.PostForm.Get("content")),
-		Expires: expires,
 	}
 
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
@@ -106,7 +100,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	id, err := app.snippets.Insert(form.Title, form.Content, strconv.Itoa(expires))
+	id, err := app.snippets.Insert(form.Title, form.Content, strconv.Itoa(form.Expires))
 
 	if err != nil {
 		app.serverError(w, err)
