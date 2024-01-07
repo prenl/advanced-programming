@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -44,12 +45,13 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 }
 
 func (app *application) requireAuthentication(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return  http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if !app.isAuthenticated(r) {
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 			return
 		}
+			
 
 		w.Header().Add("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
@@ -62,7 +64,7 @@ func noSurf(next http.Handler) http.Handler {
 	csrfHandler.SetBaseCookie(http.Cookie{
 		HttpOnly: true,
 		Path:     "/",
-		Secure:   false,
+		Secure:   true,
 	})
 
 	return csrfHandler
@@ -71,7 +73,7 @@ func noSurf(next http.Handler) http.Handler {
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-		if id == 0 { 
+		if id == 0 {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -82,10 +84,9 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		if !exists {
-			app.sessionManager.Remove(r.Context(), "authenticatedUserID")
-			next.ServeHTTP(w, r)
-			return
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+			r = r.WithContext(ctx)
 		}
 
 		next.ServeHTTP(w, r)
