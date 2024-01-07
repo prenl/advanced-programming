@@ -1,7 +1,7 @@
 package models
 
 import (
-	"database/sql",
+	"database/sql"
 	"time"
 )
 
