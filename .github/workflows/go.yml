@@ -1,6 +1,3 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Go
 
 on:
@@ -17,11 +14,13 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: '1.16'  
+        go-version: '1.21'  
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
     - name: Get dependencies
-      run: go get -v -t -d ./...
+      run: go mod download
+    - name: Tidy dependencies
+      run: go mod tidy
     - name: Build
       run: go build -v ./...
     - name: Test
